@@ -1,6 +1,12 @@
 #include <iostream>
+#include "ChatRoom.h"
+#include "easylogging++.h"
+
+INITIALIZE_EASYLOGGINGPP
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    ChatRoom* cr = ChatRoom::getInstance();
+    cr->initAccept();
+
     return 0;
 }
