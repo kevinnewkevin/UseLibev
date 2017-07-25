@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include "ev.h"
 
+class Client;
+
 class ChatRoom {
 public:
     static ChatRoom* getInstance() {
@@ -21,6 +23,8 @@ public:
 
     int initAccept();
     static void accept_cb(struct ev_loop *loop, struct ev_io *w, int revents);
+    struct ev_loop* getLoop() { return m_loop; }
+    void sendAllUser(std::string message);
 
     ~ChatRoom() {
         delete m_instance;
@@ -30,7 +34,6 @@ public:
 private:
     ChatRoom() : m_fd(-1) {
         m_loop = ev_default_loop(0);
-        m_userList.clear();
     }
     ChatRoom(const ChatRoom& rhs) {}
     const ChatRoom& operator=(const ChatRoom& rhs) {}

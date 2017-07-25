@@ -9,7 +9,12 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <errno.h>
-#include "easylogging++.h"
+#include <cstring>
+//#include "easylogging++.h"
+
+using std::vector;
+using std::cout;
+using std::endl;
 
 ChatRoom* ChatRoom::m_instance = NULL;
 
@@ -18,10 +23,12 @@ int ChatRoom::initAccept() {
 
     m_fd = socket(PF_INET, SOCK_STREAM, 0);
     if(m_fd < 0) {
-        LOG(ERROR) << "m_fd < 0 !";
+       // LOG(ERROR) << "m_fd < 0 !";
+        cout << "m_fd < 0 !" << endl;
         return 1;
     }
 
+    memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(8888);
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -31,7 +38,8 @@ int ChatRoom::initAccept() {
     //if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
 
     if(bind(m_fd, (struct sockaddr*) &addr, sizeof(addr)) < 0 ) {
-        LOG(ERROR) << "bind error!";
+       // LOG(ERROR) << "bind error!";
+        cout << "bind error!" << endl;
         return 2;
     }
 
@@ -43,7 +51,8 @@ int ChatRoom::initAccept() {
     ev_io_start(m_loop, &m_accept);
     ev_run(m_loop, 0);
 
-    LOG(INFO) << "listen ok!";
+    //LOG(INFO) << "listen ok!";
+    cout << "listen ok!" << endl;
     return 0;
 }
 
@@ -58,21 +67,31 @@ void ChatRoom::accept_cb(struct ev_loop *loop, struct ev_io *w, int revents) {
 
     int fd = accept(w->fd, (struct sockaddr*)&client_addr, &client_len);
     if(fd < 0) {
-        LOG(ERROR) << "accept fd error.";
+       // LOG(ERROR) << "accept fd error.";
+        cout << "accept fd error." << endl;
         return;
     }
 
-    ChatRoom* cr = (ChatRoom*) w->data;
+    ChatRoom* cr = static_cast<ChatRoom*> (w->data);
 
     //设置FD为非阻塞
     fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
 
-    Client* cli = new (std::nothrow) Client(inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), fd);
+    Client* cli = new (std::nothrow) Client(loop, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), fd);
     if(cli) {
         cr->m_userList.push_back(cli);
-        LOG(INFO) << inet_ntoa(client_addr.sin_addr) << ":" << ntohs(client_addr.sin_port) << " in room.";
+       // LOG(INFO) << inet_ntoa(client_addr.sin_addr) << ":" << ntohs(client_addr.sin_port) << " in room.";
+        cout << inet_ntoa(client_addr.sin_addr) << ":" << ntohs(client_addr.sin_port) << " in room." << endl;
     } else {
         close(fd);
     }
 
+}
+
+void ChatRoom::sendAllUser(std::string message) {
+    vector<Client*>::iterator iter = m_userList.begin();
+    while(iter != m_userList.end()) {
+		(*iter)->addMessage(message);
+        ++iter;
+    }
 }

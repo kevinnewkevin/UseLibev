@@ -1,8 +1,8 @@
 #include <iostream>
 #include "ChatRoom.h"
-#include "easylogging++.h"
+//#include "easylogging++.h"
 
-INITIALIZE_EASYLOGGINGPP
+//INITIALIZE_EASYLOGGINGPP
 
 int main() {
     ChatRoom* cr = ChatRoom::getInstance();
